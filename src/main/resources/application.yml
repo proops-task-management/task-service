@@ -1,0 +1,31 @@
+server:
+  port: ${PORT:8082}
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/tasks_db}
+    username: ${SPRING_DATASOURCE_USERNAME:app_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:app_pass}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migrations
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:redis}
+      port: ${SPRING_REDIS_PORT:6379}
+
+task:
+  cache:
+    ttl-seconds: ${TASK_CACHE_TTL_SECONDS:30}
+
+overdue:
+  job:
+    cron: ${OVERDUE_JOB_CRON:0 */5 * * * *}
+
