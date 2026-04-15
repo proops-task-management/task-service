@@ -43,19 +43,19 @@ src/main/java/com/proops2026/taskservice/
 ├── controller/        HTTP layer only — receive request, return response, no logic
 │   ├── TaskController.java
 │   └── CommentController.java
-├── service/           Interfaces only
+├── service/           Interfaces + implementations
 │   ├── TaskService.java
 │   ├── CommentService.java
-│   └── OverdueJobService.java
-├── serviceImpl/       Business logic implementations
-│   ├── TaskServiceImpl.java
-│   ├── CommentServiceImpl.java
-│   └── OverdueJobServiceImpl.java
-├── repository/        JpaRepository interfaces + custom query interfaces
+│   ├── OverdueJobService.java
+│   └── impl/
+│       ├── TaskServiceImpl.java
+│       ├── CommentServiceImpl.java
+│       └── OverdueJobServiceImpl.java
+├── repository/        JpaRepository interfaces + custom queries
 │   ├── TaskRepository.java
-│   └── CommentRepository.java
-├── repositoryImpl/    Complex filter queries
-│   └── TaskRepositoryImpl.java
+│   ├── CommentRepository.java
+│   └── impl/
+│       └── TaskRepositoryImpl.java   ← complex filter queries
 ├── model/             JPA entities — maps to database tables
 │   ├── Task.java
 │   └── Comment.java
