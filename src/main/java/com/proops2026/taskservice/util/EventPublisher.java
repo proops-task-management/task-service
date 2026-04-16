@@ -30,7 +30,9 @@ public class EventPublisher {
             ));
             redisTemplate.opsForList().leftPush(TASK_EVENTS_QUEUE, payload);
         } catch (JsonProcessingException ex) {
-            log.error("Failed to publish event {} for task {}", eventType, taskId);
+            log.error("Failed to serialize event {} for task {}", eventType, taskId, ex);
+        } catch (RuntimeException ex) {
+            log.warn("Failed to publish event {} for task {}", eventType, taskId, ex);
         }
     }
 }

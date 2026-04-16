@@ -44,5 +44,11 @@ public class GlobalExceptionHandler {
         log.warn("Unreadable request body");
         return ResponseEntity.status(400).body(new ErrorResponse("request body is required"));
     }
+
+    @ExceptionHandler(Exception.class)
+    ResponseEntity<ErrorResponse> handleUnexpected(Exception ex) {
+        log.error("Unexpected error", ex);
+        return ResponseEntity.status(500).body(new ErrorResponse("internal server error"));
+    }
 }
 

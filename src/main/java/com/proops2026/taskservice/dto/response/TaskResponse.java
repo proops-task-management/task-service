@@ -2,12 +2,14 @@ package com.proops2026.taskservice.dto.response;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.extern.jackson.Jacksonized;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
 @Builder
+@Jacksonized
 public class TaskResponse {
 
     private String id;
