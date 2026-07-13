@@ -14,6 +14,11 @@ WORKDIR /app
 
 COPY --from=builder /app/target/*.jar app.jar
 
+# Let the JVM size its heap from the container's cgroup memory limit (IRD-002 amended,
+# IRD-018) instead of the host's total RAM. Set here (not application.yml) so it applies
+# to every `java` invocation, including one-off tooling.
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
+
 EXPOSE 8082
 
 USER nobody

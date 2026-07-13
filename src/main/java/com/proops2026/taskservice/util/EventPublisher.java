@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -22,7 +23,11 @@ public class EventPublisher {
 
     public void publish(String eventType, String taskId, String userId) {
         try {
+            // Event schema v2 (IRD-002 amended): every event carries a unique eventId so the
+            // consumer can dedupe (notification-service processed_events ledger, IRD-004/ADR-004).
+            // Additive over v1 — a consumer that ignores eventId still works during transition.
             String payload = objectMapper.writeValueAsString(Map.of(
+                    "eventId", UUID.randomUUID().toString(),
                     "eventType", eventType,
                     "taskId", taskId,
                     "userId", userId,

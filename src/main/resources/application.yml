@@ -1,12 +1,22 @@
 server:
   port: ${PORT:8082}
+  shutdown: graceful            # stop accepting new requests, drain in-flight ones before exit
 
 spring:
+  application:
+    name: task-service
+  lifecycle:
+    timeout-per-shutdown-phase: 20s   # max drain window before force-kill (< k8s terminationGracePeriod 30s)
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://db-task:3306/tasks_db}
     username: ${SPRING_DATASOURCE_USERNAME:app_user}
     password: ${SPRING_DATASOURCE_PASSWORD:app_pass}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10     # IRD-018 budget: max_connections=150 shared across services × replicas
+      minimum-idle: 2
+      connection-timeout: 10000 # fail fast (10s) instead of hanging a request thread
+      max-lifetime: 1800000     # recycle at 30m, safely under MySQL wait_timeout
   jpa:
     hibernate:
       ddl-auto: validate
@@ -29,3 +39,24 @@ overdue:
   job:
     cron: ${OVERDUE_JOB_CRON:0 */5 * * * *}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true          # exposes /actuator/health/{liveness,readiness}
+      show-details: never       # no internal detail leak on an unauthenticated endpoint
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  metrics:
+    distribution:
+      # Bounded SLO buckets only — feeds histogram_quantile() for p95 alerts
+      # without the full percentiles-histogram bucket explosion (IRD-020 60k-series budget)
+      slo:
+        http.server.requests: 100ms,300ms,1s,3s

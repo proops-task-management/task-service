@@ -12,6 +12,29 @@ Only implement what is defined in IRD-002. Nothing more.
 
 ---
 
+## Events & Observability (Production Program — D8, IRD-002 amended + ADR-004)
+
+**Event schema is v2 — every event carries `eventId`.**
+- `EventPublisher` generates `eventId = UUID.randomUUID().toString()` per event; the consumer
+  (notification-service) uses it for idempotent processing via a `processed_events` ledger
+  (IRD-004/ADR-004). v2 is **additive** — a consumer that ignores `eventId` still works.
+- Publisher stays best-effort/fire-and-forget (at-most-once end-to-end, ADR-004); still
+  `LPUSH task-events`.
+
+**Actuator endpoints exposed** (allowlist `health,prometheus`):
+- `/actuator/health/liveness` + `/actuator/health/readiness` — wired to k8s probes.
+- `/actuator/prometheus` — Micrometer; histogram buckets capped to the SLO set
+  `100ms,300ms,1s,3s` (IRD-020 cardinality budget). No auth (gateway enforces upstream).
+
+**Production hardening:** `server.shutdown=graceful` (20s drain), HikariCP `maximum-pool-size=10`
+(IRD-018 budget), JVM `-XX:MaxRAMPercentage=75.0` set in the **Dockerfile** (`JAVA_TOOL_OPTIONS`),
+never in `application.yml`.
+
+**Integration tests** run against **real MySQL + Redis via Testcontainers** — Docker must be
+running locally. See `integration/TaskEventPublishIntegrationTest`.
+
+---
+
 ## NEVER
 - Generate code for user-service, api-gateway, notification-service, or frontend-service
 - Add endpoints not defined in IRD-002
@@ -292,6 +315,7 @@ public class EventPublisher {
     public void publish(String eventType, String taskId, String userId) {
         try {
             String payload = objectMapper.writeValueAsString(Map.of(
+                "eventId", UUID.randomUUID().toString(),   // schema v2 — consumer idempotency key
                 "eventType", eventType,
                 "taskId", taskId,
                 "userId", userId,
